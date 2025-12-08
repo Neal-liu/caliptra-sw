@@ -5,6 +5,7 @@ use caliptra_api::SocManager;
 use caliptra_auth_man_gen::default_test_manifest::{default_test_soc_manifest, DEFAULT_MCU_FW};
 use caliptra_builder::firmware::{
     APP_WITH_UART, APP_WITH_UART_FPGA, FMC_FAKE_WITH_UART, FMC_WITH_UART, ROM_WITH_FIPS_TEST_HOOKS,
+    ROM_WITH_FIPS_TEST_HOOKS_FPGA,
 };
 use caliptra_builder::ImageOptions;
 use caliptra_common::memory_layout::{ICCM_ORG, ICCM_SIZE};
@@ -176,7 +177,12 @@ fn fw_load_error_flow_with_test_hooks(
     test_hook_cmd: u8,
     pqc_key_type: FwVerificationPqcKeyType,
 ) {
-    let rom = caliptra_builder::build_firmware_rom(&ROM_WITH_FIPS_TEST_HOOKS).unwrap();
+    let rom = caliptra_builder::build_firmware_rom(&if cfg!(feature = "fpga_subsystem") {
+        ROM_WITH_FIPS_TEST_HOOKS_FPGA
+    } else {
+        ROM_WITH_FIPS_TEST_HOOKS
+    })
+    .unwrap();
     fw_load_error_flow_base(
         fw_image,
         Some(&rom),
