@@ -1001,7 +1001,8 @@ fn smoke_test() {
             .unwrap();
 
             // Hitlessly update to the no-uart application firmware
-            hw.upload_firmware(&image2.to_bytes().unwrap()).unwrap();
+            hw.upload_firmware_to_mbox(&image2.to_bytes().unwrap())
+                .unwrap();
 
             // Make sure the ldevid cert hasn't changed
             let ldev_cert_resp2 = match algorithm_type {
