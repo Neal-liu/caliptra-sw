@@ -23,7 +23,7 @@ use anyhow::Result;
 use caliptra_api::SocManager;
 use caliptra_emu_bus::{Bus, BusError, BusMmio, Device, Event, EventData, RecoveryCommandCode};
 use caliptra_emu_types::{RvAddr, RvData, RvSize};
-use caliptra_hw_model_types::{HexSlice, DEFAULT_FIELD_ENTROPY, DEFAULT_UDS_SEED};
+use caliptra_hw_model_types::HexSlice;
 use caliptra_image_types::FwVerificationPqcKeyType;
 use sensitive_mmio::{SensitiveMmio, SensitiveMmioArgs};
 use std::marker::PhantomData;
@@ -51,6 +51,7 @@ const OTP_MAPPING: (usize, usize) = (1, 4);
 // Offsets in the OTP for all partitions.
 // SW_TEST_UNLOCK_PARTITION
 const OTP_SW_TEST_UNLOCK_PARTITION_OFFSET: usize = 0x0;
+
 // SW_MANUF_PARTITION
 const OTP_SW_MANUF_PARTITION_OFFSET: usize = 0x0F8;
 // SECRET_LC_TRANSITION_PARTITION
@@ -74,6 +75,12 @@ const FUSE_VENDOR_ECC_REVOCATION_OFFSET: usize = OTP_VENDOR_REVOCATIONS_PROD_PAR
 const FUSE_VENDOR_LMS_REVOCATION_OFFSET: usize = OTP_VENDOR_REVOCATIONS_PROD_PARTITION_OFFSET + 16; // 4 bytes
 const FUSE_VENDOR_REVOCATION_OFFSET: usize = OTP_VENDOR_REVOCATIONS_PROD_PARTITION_OFFSET + 20; // 4 bytes
                                                                                                 // LIFECYCLE_PARTITION
+
+pub const VENDOR_NON_SECRET_PROD_PARTITION_BYTE_OFFSET: usize = 0xaa8;
+const UDS_SEED_OFFSET: usize = VENDOR_NON_SECRET_PROD_PARTITION_BYTE_OFFSET; // 64 bytes
+const FIELD_ENTROPY_OFFSET: usize = VENDOR_NON_SECRET_PROD_PARTITION_BYTE_OFFSET + 64; // 32 bytes
+const DBG_MANUF_SERVICE_REG_OFFSET: usize = VENDOR_NON_SECRET_PROD_PARTITION_BYTE_OFFSET + 96; // 4 bytes
+
 const OTP_LIFECYCLE_PARTITION_OFFSET: usize = 0xE30;
 
 // These are the default physical addresses for the peripherals. The addresses listed in
@@ -404,6 +411,7 @@ pub struct ModelFpgaSubsystem {
     pub realtime_thread_exit_flag: Arc<AtomicBool>,
 
     pub fuses: Fuses,
+    pub dbg_manuf_service: u32,
     pub otp_init: Vec<u8>,
     pub output: Output,
     pub recovery_started: bool,
@@ -1309,6 +1317,44 @@ impl ModelFpgaSubsystem {
         let offset = OTP_SW_MANUF_PARTITION_OFFSET;
         otp_data[offset..offset + mem.len()].copy_from_slice(&mem);
 
+        // Provision UDS seed in SECRET_MANUF partition
+        println!("Provisioning UDS seed in SECRET_MANUF partition.");
+        let uds_seed_bytes: Vec<u8> = self
+            .fuses
+            .uds_seed
+            .iter()
+            .flat_map(|&word| word.to_le_bytes())
+            .collect();
+        println!("Setting UDS seed to {:x?}", HexSlice(&uds_seed_bytes));
+        otp_data[UDS_SEED_OFFSET..UDS_SEED_OFFSET + uds_seed_bytes.len()]
+            .copy_from_slice(&uds_seed_bytes);
+
+        // Provision field entropy in SECRET_MANUF partition
+        println!("Provisioning field entropy in SECRET_MANUF partition.");
+        let field_entropy_bytes: Vec<u8> = self
+            .fuses
+            .field_entropy
+            .iter()
+            .flat_map(|&word| word.to_le_bytes())
+            .collect();
+        println!(
+            "Setting field entropy to {:x?}",
+            HexSlice(&field_entropy_bytes)
+        );
+        otp_data[FIELD_ENTROPY_OFFSET..FIELD_ENTROPY_OFFSET + field_entropy_bytes.len()]
+            .copy_from_slice(&field_entropy_bytes);
+
+        // Provision dbg_manuf_service in VENDOR_NON_SECRET_PROD partition
+        println!("Provisioning dbg_manuf_service in VENDOR_NON_SECRET_PROD partition.");
+        let dbg_manuf_service_bytes = self.dbg_manuf_service.to_le_bytes();
+        println!(
+            "Setting dbg_manuf_service to {:x?}",
+            HexSlice(&dbg_manuf_service_bytes)
+        );
+        otp_data[DBG_MANUF_SERVICE_REG_OFFSET
+            ..DBG_MANUF_SERVICE_REG_OFFSET + dbg_manuf_service_bytes.len()]
+            .copy_from_slice(&dbg_manuf_service_bytes);
+
         let vendor_pk_hash = self.fuses.vendor_pk_hash.as_bytes();
         println!(
             "Setting vendor public key hash to {:x?}",
@@ -1574,6 +1620,7 @@ impl HwModel for ModelFpgaSubsystem {
 
             otp_init: vec![],
             fuses: params.fuses,
+            dbg_manuf_service: params.dbg_manuf_service.into(),
             realtime_thread: None,
             realtime_thread_exit_flag,
 
@@ -1624,16 +1671,6 @@ impl HwModel for ModelFpgaSubsystem {
         // Set the CSR HMAC key
         for i in 0..16 {
             m.wrapper.regs().cptra_csr_hmac_key[i].set(params.csr_hmac_key[i]);
-        }
-
-        // Set the UDS Seed
-        for (i, udsi) in DEFAULT_UDS_SEED.iter().copied().enumerate() {
-            m.wrapper.regs().cptra_obf_uds_seed[i].set(udsi);
-        }
-
-        // Set the FE Seed
-        for (i, fei) in DEFAULT_FIELD_ENTROPY.iter().copied().enumerate() {
-            m.wrapper.regs().cptra_obf_field_entropy[i].set(fei);
         }
 
         // Currently not using strap UDS and FE
