@@ -177,10 +177,10 @@ pub fn attempt_ssp_access_fw_load() {
             fuses,
             rom: &rom,
             security_state,
+            initial_dbg_manuf_service_reg: (FipsTestHook::HALT_FW_LOAD as u32) << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
         Some(BootParams {
-            initial_dbg_manuf_service_reg: (FipsTestHook::HALT_FW_LOAD as u32) << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
     );

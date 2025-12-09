@@ -317,6 +317,7 @@ pub fn start_rt_test_pqc_model(
     } else {
         0
     };
+    init_params.initial_dbg_manuf_service_reg = boot_flags;
 
     let image = image.to_bytes().unwrap();
 
@@ -333,7 +334,6 @@ pub fn start_rt_test_pqc_model(
         init_params,
         BootParams {
             fw_image: if args.stop_at_rom { None } else { Some(&image) },
-            initial_dbg_manuf_service_reg: boot_flags,
             soc_manifest,
             mcu_fw_image,
             ..Default::default()

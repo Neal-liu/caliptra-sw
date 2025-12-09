@@ -223,6 +223,8 @@ pub struct InitParams<'a> {
 
     pub dbg_manuf_service: DbgManufServiceRegReq,
 
+    pub initial_dbg_manuf_service_reg: u32,
+
     pub subsystem_mode: bool,
 
     pub ocp_lock_en: bool,
@@ -311,6 +313,7 @@ impl Default for InitParams<'_> {
             security_state: *SecurityState::default()
                 .set_device_lifecycle(DeviceLifecycle::Unprovisioned),
             dbg_manuf_service: Default::default(),
+            initial_dbg_manuf_service_reg: Default::default(),
             subsystem_mode: false,
             ocp_lock_en: cfg!(feature = "ocp-lock"),
             uds_fuse_row_granularity_64: true,
@@ -380,7 +383,6 @@ fn trace_path_or_env(trace_path: Option<PathBuf>) -> Option<PathBuf> {
 #[derive(Clone)]
 pub struct BootParams<'a> {
     pub fw_image: Option<&'a [u8]>,
-    pub initial_dbg_manuf_service_reg: u32,
     pub initial_repcnt_thresh_reg: Option<CptraItrngEntropyConfig1WriteVal>,
     pub initial_adaptp_thresh_reg: Option<CptraItrngEntropyConfig0WriteVal>,
     pub valid_axi_user: Vec<u32>,
@@ -395,7 +397,6 @@ impl Default for BootParams<'_> {
     fn default() -> Self {
         Self {
             fw_image: Default::default(),
-            initial_dbg_manuf_service_reg: Default::default(),
             initial_repcnt_thresh_reg: Default::default(),
             initial_adaptp_thresh_reg: Default::default(),
             valid_axi_user: vec![0, 1, 2, 3, 4],
@@ -687,9 +688,10 @@ pub trait HwModel: SocManager {
     {
         HwModel::init_fuses(self);
 
+        let initial_dbg_manuf_service_reg = self.initial_dbg_manuf_service_reg();
         self.soc_ifc()
             .cptra_dbg_manuf_service_reg()
-            .write(|_| boot_params.initial_dbg_manuf_service_reg);
+            .write(|_| initial_dbg_manuf_service_reg);
 
         self.soc_ifc()
             .cptra_wdt_cfg()
@@ -1289,6 +1291,9 @@ pub trait HwModel: SocManager {
     fn fuses(&self) -> &Fuses;
     /// Set the fuse settings. A cold boot will need to be done to take affect.
     fn set_fuses(&mut self, fuses: Fuses);
+
+    /// Get the initial_dbg_manuf_service_reg value
+    fn initial_dbg_manuf_service_reg(&self) -> u32;
 }
 
 #[cfg(test)]

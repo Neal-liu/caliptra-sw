@@ -162,11 +162,11 @@ fn test_cold_reset_no_rng() {
             InitParams {
                 fuses,
                 rom: &rom,
+                initial_dbg_manuf_service_reg: 0x2, // Disable RNG
                 ..Default::default()
             },
             BootParams {
                 fw_image: Some(&image_bundle.to_bytes().unwrap()),
-                initial_dbg_manuf_service_reg: 0x2, // Disable RNG
                 ..Default::default()
             },
         )

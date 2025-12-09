@@ -416,7 +416,7 @@ pub struct ModelFpgaSubsystem {
     pub realtime_thread_exit_flag: Arc<AtomicBool>,
 
     pub fuses: Fuses,
-    pub dbg_manuf_service: u32,
+    pub initial_dbg_manuf_service: u32,
     pub otp_init: Vec<u8>,
     pub output: Output,
     pub recovery_started: bool,
@@ -1351,7 +1351,7 @@ impl ModelFpgaSubsystem {
 
         // Provision dbg_manuf_service in VENDOR_NON_SECRET_PROD partition
         println!("Provisioning dbg_manuf_service in VENDOR_NON_SECRET_PROD partition.");
-        let dbg_manuf_service_bytes = self.dbg_manuf_service.to_le_bytes();
+        let dbg_manuf_service_bytes = self.initial_dbg_manuf_service.to_le_bytes();
         println!(
             "Setting dbg_manuf_service to {:x?}",
             HexSlice(&dbg_manuf_service_bytes)
@@ -1634,7 +1634,7 @@ impl HwModel for ModelFpgaSubsystem {
 
             otp_init: vec![],
             fuses: params.fuses,
-            dbg_manuf_service: params.dbg_manuf_service.into(),
+            initial_dbg_manuf_service: params.initial_dbg_manuf_service_reg,
             realtime_thread: None,
             realtime_thread_exit_flag,
 
@@ -1832,11 +1832,6 @@ impl HwModel for ModelFpgaSubsystem {
         //     .cptra_wdt_cfg()
         //     .at(1)
         //     .write(|_| (boot_params.wdt_timeout_cycles >> 32) as u32);
-
-        // TODO: do we need to support these in MCU ROM?
-        // self.soc_ifc()
-        //     .cptra_dbg_manuf_service_reg()
-        //     .write(|_| boot_params.initial_dbg_manuf_service_reg);
 
         // if let Some(reg) = boot_params.initial_repcnt_thresh_reg {
         //     self.soc_ifc()
@@ -2063,6 +2058,10 @@ impl HwModel for ModelFpgaSubsystem {
 
     fn set_fuses(&mut self, fuses: Fuses) {
         self.fuses = fuses;
+    }
+
+    fn initial_dbg_manuf_service_reg(&self) -> u32 {
+        self.initial_dbg_manuf_service
     }
 }
 

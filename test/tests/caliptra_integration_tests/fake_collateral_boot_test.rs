@@ -101,11 +101,11 @@ fn fake_boot_test() {
                     },
                     rom: &rom,
                     security_state: canned_cert_security_state,
+                    initial_dbg_manuf_service_reg: (1 << 30),
                     ..Default::default()
                 },
                 BootParams {
                     fw_image: Some(&image.to_bytes().unwrap()),
-                    initial_dbg_manuf_service_reg: (1 << 30),
                     ..Default::default()
                 },
             )

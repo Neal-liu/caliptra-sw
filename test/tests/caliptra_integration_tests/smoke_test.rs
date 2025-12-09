@@ -92,10 +92,10 @@ fn retrieve_csr_test() {
             security_state: *SecurityState::default()
                 .set_debug_locked(true)
                 .set_device_lifecycle(DeviceLifecycle::Manufacturing),
+            initial_dbg_manuf_service_reg: GENERATE_IDEVID_CSR,
             ..Default::default()
         },
         BootParams {
-            initial_dbg_manuf_service_reg: GENERATE_IDEVID_CSR,
             ..Default::default()
         },
     )

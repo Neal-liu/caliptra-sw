@@ -225,10 +225,10 @@ fn fw_load_error_flow_base(
             fuses,
             security_state: SecurityState::from(life_cycle as u32),
             rom: rom.unwrap_or_default(),
+            initial_dbg_manuf_service_reg: initial_dbg_manuf_service_reg.unwrap_or_default(),
             ..Default::default()
         }),
         Some(BootParams {
-            initial_dbg_manuf_service_reg: initial_dbg_manuf_service_reg.unwrap_or_default(),
             ..Default::default()
         }),
     );
