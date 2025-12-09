@@ -75,6 +75,7 @@ pub struct ModelEmulated {
     cpu_enabled: Rc<Cell<bool>>,
     trace_path: Option<PathBuf>,
     fuses: Fuses,
+    initial_dbg_manuf_service_reg: u32,
 
     // Keep this even when not including the coverage feature to keep the
     // interface consistent
@@ -259,6 +260,7 @@ impl HwModel for ModelEmulated {
             cpu_enabled,
             trace_path: trace_path_or_env(params.trace_path),
             fuses: params.fuses,
+            initial_dbg_manuf_service_reg: params.initial_dbg_manuf_service_reg,
             _rom_image_tag: image_tag,
             iccm_image_tag: None,
             trng_mode,
@@ -462,5 +464,9 @@ impl HwModel for ModelEmulated {
 
     fn set_fuses(&mut self, fuses: Fuses) {
         self.fuses = fuses;
+    }
+
+    fn initial_dbg_manuf_service_reg(&self) -> u32 {
+        self.initial_dbg_manuf_service_reg
     }
 }

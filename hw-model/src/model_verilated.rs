@@ -75,6 +75,7 @@ struct AbsoluteEtrngResponse {
 pub struct ModelVerilated {
     pub v: CaliptraVerilated,
     fuses: Fuses,
+    initial_dbg_manuf_service_reg: u32,
 
     output: Output,
     trace_enabled: bool,
@@ -230,6 +231,7 @@ impl HwModel for ModelVerilated {
         let mut m = ModelVerilated {
             v,
             fuses: params.fuses,
+            initial_dbg_manuf_service_reg: params.initial_dbg_manuf_service_reg,
             output,
             trace_enabled: false,
             trace_path: trace_path_or_env(params.trace_path),
@@ -467,5 +469,9 @@ impl ModelVerilated {
 
     fn set_fuses(&mut self, fuses: Fuses) {
         self.fuses = fuses;
+    }
+
+    fn initial_dbg_manuf_service_reg(&self) -> u32 {
+        self.initial_dbg_manuf_service_reg
     }
 }

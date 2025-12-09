@@ -101,10 +101,10 @@ fn test_fake_rom_production_enabled() {
         InitParams {
             rom: &rom,
             security_state,
+            initial_dbg_manuf_service_reg: DBG_MANUF_FAKE_ROM_PROD_EN,
             ..Default::default()
         },
         BootParams {
-            initial_dbg_manuf_service_reg: DBG_MANUF_FAKE_ROM_PROD_EN,
             ..Default::default()
         },
     )
@@ -253,10 +253,10 @@ fn test_image_verify() {
                 fuses,
                 rom: &rom,
                 security_state: SecurityState::from(life_cycle as u32),
+                initial_dbg_manuf_service_reg: DBG_MANUF_FAKE_ROM_IMAGE_VERIFY,
                 ..Default::default()
             },
             BootParams {
-                initial_dbg_manuf_service_reg: DBG_MANUF_FAKE_ROM_IMAGE_VERIFY,
                 ..Default::default()
             },
         )

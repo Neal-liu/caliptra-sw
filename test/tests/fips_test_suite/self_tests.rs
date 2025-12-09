@@ -26,11 +26,11 @@ pub fn kat_halt_check_no_output() {
     let mut hw = fips_test_init_to_boot_start(
         Some(InitParams {
             rom: &rom,
+            initial_dbg_manuf_service_reg: (FipsTestHook::HALT_SELF_TESTS as u32)
+                << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
         Some(BootParams {
-            initial_dbg_manuf_service_reg: (FipsTestHook::HALT_SELF_TESTS as u32)
-                << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
     );
@@ -50,10 +50,10 @@ pub fn fw_load_halt_check_no_output() {
     let mut hw = fips_test_init_to_rom(
         Some(InitParams {
             rom: &rom,
+            initial_dbg_manuf_service_reg: (FipsTestHook::HALT_FW_LOAD as u32) << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
         Some(BootParams {
-            initial_dbg_manuf_service_reg: (FipsTestHook::HALT_FW_LOAD as u32) << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
     );
@@ -77,10 +77,10 @@ fn self_test_failure_flow_rom(hook_code: u8, exp_error_code: u32) {
     let mut hw = fips_test_init_to_boot_start(
         Some(InitParams {
             rom: &rom,
+            initial_dbg_manuf_service_reg: (hook_code as u32) << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
         Some(BootParams {
-            initial_dbg_manuf_service_reg: (hook_code as u32) << HOOK_CODE_OFFSET,
             ..Default::default()
         }),
     );

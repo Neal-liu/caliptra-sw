@@ -133,6 +133,7 @@ pub struct ModelFpgaRealtime {
     mmio: *mut u32,
     output: Output,
     fuses: Fuses,
+    initial_dbg_manuf_service_reg: u32,
 
     realtime_thread: Option<thread::JoinHandle<()>>,
     realtime_thread_exit_flag: Arc<AtomicBool>,
@@ -520,6 +521,7 @@ impl HwModel for ModelFpgaRealtime {
             mmio,
             output,
             fuses: params.fuses,
+            initial_dbg_manuf_service_reg: params.initial_dbg_manuf_service_reg,
 
             realtime_thread,
             realtime_thread_exit_flag,
@@ -721,6 +723,10 @@ impl HwModel for ModelFpgaRealtime {
 
     fn set_fuses(&mut self, fuses: Fuses) {
         self.fuses = fuses;
+    }
+
+    fn initial_dbg_manuf_service_reg(&self) -> u32 {
+        self.initial_dbg_manuf_service_reg
     }
 }
 
