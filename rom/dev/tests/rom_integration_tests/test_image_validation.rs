@@ -2725,6 +2725,7 @@ fn cert_test_with_ueid() {
                 fuses,
                 rom: &rom,
                 security_state: SecurityState::from(life_cycle as u32),
+                initial_dbg_manuf_service_reg: MfgFlags::GENERATE_IDEVID_CSR.bits(),
                 ..Default::default()
             },
             BootParams {
@@ -2734,12 +2735,6 @@ fn cert_test_with_ueid() {
         .unwrap();
 
         let mut output = vec![];
-
-        // Set gen_idev_id_csr to generate CSR.
-        let flags = MfgFlags::GENERATE_IDEVID_CSR;
-        hw.soc_ifc()
-            .cptra_dbg_manuf_service_reg()
-            .write(|_| flags.bits());
 
         // Download the CSR Envelope from the mailbox.
         let csr_envelop = helpers::get_csr_envelop(&mut hw).unwrap();
